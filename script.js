@@ -5,7 +5,9 @@ const expense = document.querySelector("#expense")
 const category = document.querySelector("#category")
 
 //Seleciona os elementos da lista
-const ul = document.querySelector("aside ul")
+const ul = document.querySelector("ul")
+const expenseQuantity = document.querySelector("aside header p span")
+const expensesTotal = document.querySelector("aside header h2")
 
 
 //Captura o evento de input
@@ -46,12 +48,18 @@ form.onsubmit = (event) => {
         created_at: new Date(),
     }
     //Chama a função wue irá adicionar a despesa
-    expenseAdd(newExpense)
+    expenseAddRemove(newExpense)
 
+    //Limpa o formulário
+    form.reset()
+
+    //Coloca o foco no input de nome da despesa
+    expense.focus()
 
 }
 
-function expenseAdd(newExpense){
+//Adiciona e remove itens na lista
+function expenseAddRemove(newExpense){
     try {
         //Cria o elemento de li para adicionar na lista na ul
         const li = document.createElement("li")
@@ -95,20 +103,73 @@ function expenseAdd(newExpense){
         //Adiciona a li na ul
         ul.append(li)
         
+        //Adiciona o evento de clique para remover o item
+        removeIcon.onclick = () => {
+            try {
+                const li = removeIcon.closest("li")
+                li.remove()
+                
+                //Atualiza o total após remover o item
+                updateTotal()
+            } catch (error) {
+                alert("Não foi possível remover a despesa")
+                console.log(error)
+            }
+        }
+        
+        //Atualiza o valor total
+        updateTotal()
+        
     } catch (error) {
         alert("Não for possivel atualizar a lista de despesas")
         console.log(error)
     }
 }
 
-
-//Captura o evento de click no icone de remover
-removeIcon.onclick = () => {
+//Calcular o valor total das despesas
+function updateTotal(){
     try {
-        const li = removeIcon.closest("li")
-        li.remove()
+        const items = ul.children
+
+        expenseQuantity.textContent = `${items.length} ${items.length > 1 ? "despesas" : "despesa"}`
+
+        //Variável para incrementa o total
+        let total = 0
+
+        //percorre os itens da lista
+        for (let i = 0; i < items.length; i++) {
+            const itemAmount = items[i].querySelector(".expense-amount")
+
+            // Extrair apenas os números e vírgula do texto
+            let value = itemAmount.textContent.replace(/[^0-9,]/g, "").replace(",", ".")
+
+            //Transformar o valor em centavos
+            
+            value = parseFloat(value)
+
+            //Verificar se o valor é um número
+            if(isNaN(value)){
+                return alert("Não for possivel atualizar o valor total")
+            }
+
+            total += Number(value)    
+        }
+
+        // Formatar o total como moeda brasileira
+        const symbol = document.createElement("small")
+        symbol.textContent = "R$"
+
+        //Transformar o valor em centavos
+        total = formatCurrencyBRL(total).toUpperCase().replace("R$", "")
+        
+        //Remover o conteúdo do elemento expensesTotal
+        expensesTotal.innerHTML = ""
+
+        //Adicionar o símbolo e o valor total ao expensesTotal
+        expensesTotal.append(symbol, total)
+
     } catch (error) {
-        alert("Não for possivel remover a despesa")
+        alert("Não for possivel atualizar o valor total")
         console.log(error)
     }
 }
